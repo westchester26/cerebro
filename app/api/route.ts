@@ -2,57 +2,69 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
-    const { prompt, proMode } = await req.json();
-    const apiKey = process.env.GEMINI_API_KEY;
+    const { prompt, mode, isIncognito } = await req.json();
 
-    // 1. Проверяем наличие ключа
-    if (!apiKey) {
+    const GROQ_API_KEY = process.env.GROQ_API_KEY;
+
+    if (!GROQ_API_KEY) {
       return NextResponse.json(
-        { result: "⚠️ Ошибка: GEMINI_API_KEY не настроен в Vercel Environment Variables." },
+        { result: '⚠️ Ошибка: Ключ GROQ_API_KEY не найден в настройках сервера.' },
         { status: 500 }
       );
     }
 
-    if (!prompt || typeof prompt !== 'string') {
-      return NextResponse.json(
-        { result: "⚠️ Ошибка: Пустой запрос." },
-        { status: 400 }
-      );
+    // Личность и правила Cerebro
+    let systemPrompt = `
+Ты — Cerebro (Cеребро), умный, продвинутый и независимый искусственный интеллект.
+
+Твои правила общения и принципы:
+1. Идентичность: Твое имя — Cerebro (Cеребро). Ты являешься моделью искусственного интеллекта, созданной для решения любых интеллектуальных задач.
+2. Конфиденциальность: Ты строжайше соблюдаешь приватность. Ты НЕ собираешь, НЕ передаешь и НЕ продаешь личные данные пользователей третьим лицам. Все запросы обрабатываются конфиденциально.
+3. Происхождение: Если тебя спрашивают, кто ты и как создан, отвечай, что ты — ИИ Cerebro, работающий на защищенной архитектуре безопасной обработки данных.
+4. Стиль: Отвечай уверенно, естественно, разумно и грамотно. Будь полезен и общайся как настоящий, живой ИИ-ассистент высокого уровня.
+`.trim();
+
+    // Настройка характера под режим
+    if (mode === 'search') {
+      systemPrompt += '\n\nТекущий режим: Поиск. Давай точные, структурированные, понятные и проверенные ответы.';
+    } else if (mode === 'computer') {
+      systemPrompt += '\n\nТекущий режим: Компьютер. Помогай с программированием, анализом кода, логикой и проектированием систем.';
     }
 
-    const modelName = proMode ? "gemini-1.5-pro" : "gemini-1.5-flash";
+    if (isIncognito) {
+      systemPrompt += '\n\nВнимание: Включен режим Инкогнито. Не сохраняй контекст и отвечай строго и сжато по сути запроса.';
+    }
 
-    // 2. Используем правильный эндпоинт v1beta
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
-        })
-      }
-    );
+    // Запрос к Groq API
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile', // Топовая и очень умная модель Llama 3.3 70B
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.7,
+      }),
+    });
 
     const data = await response.json();
 
-    // 3. Если Google вернул ошибку — передаем ее подробности и статус
-    if (!response.ok || data.error) {
-      console.error("Google API Error:", JSON.stringify(data.error, null, 2));
-      return NextResponse.json(
-        { result: `❌ Ошибка Google API (${response.status}): ${data.error?.message || 'Неизвестный сбой'}` },
-        { status: response.status || 400 }
-      );
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'Ошибка запроса к Groq API');
     }
 
-    const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Ответ не получен.";
+    const result = data.choices[0]?.message?.content || 'Cerebro прислал пустой ответ.';
 
-    return NextResponse.json({ result: aiText });
-
+    return NextResponse.json({ result });
   } catch (error: any) {
-    console.error("Vercel Internal Error:", error);
+    console.error('Groq API Error:', error);
     return NextResponse.json(
-      { result: `⚠️ Внутренняя ошибка сервера: ${error?.message || 'Сбой'}` },
+      { result: `⚠️ Ошибка Cerebro: ${error.message}` },
       { status: 500 }
     );
   }

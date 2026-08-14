@@ -5,7 +5,7 @@ import {
   Sparkles, Plus, Search, 
   User, Loader2, ChevronDown, Monitor, LayoutGrid, Hexagon, 
   MoreHorizontal, PanelLeft, Mic, AudioLines, FolderGit2,
-  Menu, Compass, TrendingUp, Briefcase, Heart, GraduationCap, Gavel
+  Menu, Compass, TrendingUp, Briefcase, Heart, GraduationCap, Gavel, X
 } from 'lucide-react';
 
 const IncognitoIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -54,7 +54,7 @@ export default function Home() {
 
   const [greetingIndex, setGreetingIndex] = useState(0);
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('Computer');
   const [isProjectsOpen, setIsProjectsOpen] = useState(true);
   const [isSessionsOpen, setIsSessionsOpen] = useState(true);
@@ -62,6 +62,11 @@ export default function Home() {
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * SEARCH_GREETINGS.length);
     setGreetingIndex(randomIndex);
+    
+    // Авто-открытие сайдбара только на больших экранах
+    if (window.innerWidth >= 768) {
+      setIsSidebarOpen(true);
+    }
   }, []);
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -89,36 +94,46 @@ export default function Home() {
   return (
     <div style={{ backgroundColor: '#141414', color: '#E3E5E5' }} className="flex w-full h-screen font-sans overflow-hidden select-none relative">
       
-      {/* 1. Левый Сайдбар */}
+      {/* Затемнение фона для мобильного сайдбара */}
+      {isSidebarOpen && (
+        <div 
+          onClick={() => setIsSidebarOpen(false)}
+          className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300"
+        />
+      )}
+
+      {/* 1. Левый Сайдбар (Overlay на мобилках, сдвиг на десктопе) */}
       <aside 
         style={{ backgroundColor: '#0F1010', borderColor: '#222424' }} 
-        className={`h-full flex flex-col justify-between flex-shrink-0 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] border-r overflow-hidden z-20 ${
+        className={`fixed md:relative inset-y-0 left-0 h-full flex flex-col justify-between flex-shrink-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] border-r overflow-hidden z-50 ${
           isSidebarOpen 
-            ? 'w-[230px] p-3 opacity-100' 
-            : 'w-0 p-0 opacity-0 border-transparent pointer-events-none'
+            ? 'w-[250px] md:w-[230px] p-3 opacity-100 translate-x-0' 
+            : 'w-0 p-0 opacity-0 -translate-x-full md:translate-x-0 border-transparent pointer-events-none'
         }`}
       >
-        <div className="flex flex-col gap-4 min-w-[206px]">
+        <div className="flex flex-col gap-4 min-w-[220px] md:min-w-[206px]">
           
           <div className="flex items-center justify-between px-2 pt-1">
             <div className="flex items-center gap-2">
               <div style={{ backgroundColor: 'rgba(32, 184, 205, 0.15)', borderColor: 'rgba(32, 184, 205, 0.4)' }} className="w-5 h-5 rounded-md border flex items-center justify-center">
                 <Sparkles className="w-3 h-3 text-[#20B8CD]" />
               </div>
+              <span className="text-xs font-semibold tracking-wider text-white md:hidden">CEREBRO</span>
             </div>
             <button 
               onClick={() => setIsSidebarOpen(false)}
               className="p-1.5 hover:bg-[#202222] rounded-lg text-gray-400 hover:text-white transition-colors duration-300"
               title="Collapse sidebar"
             >
-              <PanelLeft className="w-3.5 h-3.5" />
+              <X className="w-4 h-4 md:hidden" />
+              <PanelLeft className="hidden md:block w-3.5 h-3.5" />
             </button>
           </div>
 
           <nav className="flex flex-col gap-0.5 mt-1">
             <button 
-              onClick={() => { setResponse(''); setPrompt(''); setActiveTab('New'); }}
-              className="flex items-center gap-2.5 px-2.5 py-1.5 text-xs text-[#E3E5E5] hover:bg-[#202222] rounded-lg transition-all duration-300 font-medium text-left group"
+              onClick={() => { setResponse(''); setPrompt(''); setActiveTab('New'); if(window.innerWidth < 768) setIsSidebarOpen(false); }}
+              className="flex items-center gap-2.5 px-2.5 py-2 md:py-1.5 text-xs text-[#E3E5E5] hover:bg-[#202222] rounded-lg transition-all duration-300 font-medium text-left group"
             >
               <div className="w-5 h-5 rounded-full bg-[#202222] group-hover:bg-[#2A2C2C] flex items-center justify-center border border-[#2E3030] transition-colors duration-300">
                 <Plus className="w-3 h-3 text-white" />
@@ -127,24 +142,24 @@ export default function Home() {
             </button>
 
             <button 
-              onClick={() => setActiveTab('Computer')}
-              className={`flex items-center gap-2.5 px-2.5 py-1.5 text-xs rounded-lg transition-all duration-300 font-medium text-left ${activeTab === 'Computer' ? 'bg-[#202222] text-white' : 'text-[#8E9393] hover:text-white hover:bg-[#202222]/50'}`}
+              onClick={() => { setActiveTab('Computer'); if(window.innerWidth < 768) setIsSidebarOpen(false); }}
+              className={`flex items-center gap-2.5 px-2.5 py-2 md:py-1.5 text-xs rounded-lg transition-all duration-300 font-medium text-left ${activeTab === 'Computer' ? 'bg-[#202222] text-white' : 'text-[#8E9393] hover:text-white hover:bg-[#202222]/50'}`}
             >
               <Monitor className="w-3.5 h-3.5" />
               <span>Computer</span>
             </button>
 
             <button 
-              onClick={() => setActiveTab('Artifacts')}
-              className={`flex items-center gap-2.5 px-2.5 py-1.5 text-xs rounded-lg transition-all duration-300 font-medium text-left ${activeTab === 'Artifacts' ? 'bg-[#202222] text-white' : 'text-[#8E9393] hover:text-white hover:bg-[#202222]/50'}`}
+              onClick={() => { setActiveTab('Artifacts'); if(window.innerWidth < 768) setIsSidebarOpen(false); }}
+              className={`flex items-center gap-2.5 px-2.5 py-2 md:py-1.5 text-xs rounded-lg transition-all duration-300 font-medium text-left ${activeTab === 'Artifacts' ? 'bg-[#202222] text-white' : 'text-[#8E9393] hover:text-white hover:bg-[#202222]/50'}`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
               <span>Artifacts</span>
             </button>
 
             <button 
-              onClick={() => setActiveTab('Customize')}
-              className={`flex items-center gap-2.5 px-2.5 py-1.5 text-xs rounded-lg transition-all duration-300 font-medium text-left ${activeTab === 'Customize' ? 'bg-[#202222] text-white' : 'text-[#8E9393] hover:text-white hover:bg-[#202222]/50'}`}
+              onClick={() => { setActiveTab('Customize'); if(window.innerWidth < 768) setIsSidebarOpen(false); }}
+              className={`flex items-center gap-2.5 px-2.5 py-2 md:py-1.5 text-xs rounded-lg transition-all duration-300 font-medium text-left ${activeTab === 'Customize' ? 'bg-[#202222] text-white' : 'text-[#8E9393] hover:text-white hover:bg-[#202222]/50'}`}
             >
               <Hexagon className="w-3.5 h-3.5" />
               <span>Customize</span>
@@ -190,7 +205,7 @@ export default function Home() {
 
         </div>
 
-        <div style={{ borderColor: '#2E3030' }} className="pt-2 border-t min-w-[206px]">
+        <div style={{ borderColor: '#2E3030' }} className="pt-2 border-t min-w-[220px] md:min-w-[206px]">
           <button className="flex items-center gap-2.5 w-full px-2.5 py-1.5 text-xs hover:bg-[#202222] rounded-lg transition-colors duration-300 text-[#8E9393] hover:text-white">
             <div style={{ backgroundColor: '#2E3030' }} className="w-6 h-6 rounded-full flex items-center justify-center">
               <User className="w-3.5 h-3.5 text-white" />
@@ -201,7 +216,7 @@ export default function Home() {
       </aside>
 
       {/* 2. Правые верхние кнопки */}
-      <div className="absolute top-4 right-4 z-40 flex items-center gap-2">
+      <div className="absolute top-3 right-3 md:top-4 md:right-4 z-30 flex items-center gap-1.5 md:gap-2">
         <button
           onClick={() => setIsIncognito(!isIncognito)}
           className={`p-2 rounded-xl transition-all duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center justify-center cursor-pointer ${
@@ -253,40 +268,37 @@ export default function Home() {
         
         <button 
           onClick={() => setIsSidebarOpen(true)}
-          className={`absolute top-4 left-4 z-30 p-2 rounded-xl bg-[#1F2020] border border-[#2E3030] text-gray-400 hover:text-white hover:border-[#20B8CD]/50 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-md ${
+          className={`absolute top-3 left-3 md:top-4 md:left-4 z-30 p-2 rounded-xl bg-[#1F2020] border border-[#2E3030] text-gray-400 hover:text-white hover:border-[#20B8CD]/50 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-md ${
             isSidebarOpen ? 'opacity-0 pointer-events-none scale-95' : 'opacity-100 scale-100'
           }`}
         >
           <PanelLeft className="w-4 h-4" />
         </button>
 
-        {/* Увеличена ширина контейнера до max-w-[750px] */}
-        <div className="flex-1 flex flex-col items-center justify-center max-w-[750px] w-full mx-auto px-4 py-6">
+        <div className="flex-1 flex flex-col items-center justify-center max-w-[750px] w-full mx-auto px-3 sm:px-4 py-6 mt-6 md:mt-0">
           
-          {/* Блок заголовка: Добавлен pl-3 (отступ слева) чтобы текст лежал чуть правее левой границы поиска */}
+          {/* Заголовок */}
           {!response && !isLoading && (
-            <div className="w-full text-left mb-6 relative min-h-[60px] pl-3">
+            <div className="w-full text-left mb-4 md:mb-6 relative min-h-[50px] md:min-h-[60px] pl-2 md:pl-3">
               
-              {/* Обычный режим */}
-              <div className={`flex flex-col gap-1 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] absolute top-0 left-3 w-full ${
+              <div className={`flex flex-col gap-0.5 md:gap-1 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] absolute top-0 left-2 md:left-3 w-full ${
                 isIncognito ? 'opacity-0 translate-y-2 pointer-events-none' : 'opacity-100 translate-y-0'
               }`}>
-                <span className="text-[12px] font-normal text-[#8E9393]">
+                <span className="text-[11px] md:text-[12px] font-normal text-[#8E9393]">
                   {mode === 'search' ? 'Search' : 'Computer'}
                 </span>
-                <h1 className="text-2xl md:text-[26px] font-normal tracking-tight text-[#E3E5E5]">
+                <h1 className="text-xl sm:text-2xl md:text-[26px] font-normal tracking-tight text-[#E3E5E5] pr-16 md:pr-0">
                   {mode === 'search' ? SEARCH_GREETINGS[greetingIndex] : COMPUTER_GREETINGS[greetingIndex]}
                 </h1>
               </div>
 
-              {/* Инкогнито */}
-              <div className={`flex flex-col gap-1 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] absolute top-0 left-3 w-full ${
+              <div className={`flex flex-col gap-0.5 md:gap-1 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] absolute top-0 left-2 md:left-3 w-full ${
                 isIncognito ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
               }`}>
-                <span className="text-[12px] font-normal text-[#20B8CD]">
+                <span className="text-[11px] md:text-[12px] font-normal text-[#20B8CD]">
                   Incognito
                 </span>
-                <h1 className="text-2xl md:text-[26px] font-normal tracking-tight text-[#E3E5E5]">
+                <h1 className="text-xl sm:text-2xl md:text-[26px] font-normal tracking-tight text-[#E3E5E5]">
                   You’re incognito
                 </h1>
               </div>
@@ -309,7 +321,7 @@ export default function Home() {
               isIncognito ? 'opacity-100' : 'opacity-0'
             }`} />
 
-            <div className="relative z-10 p-4 flex flex-col">
+            <div className="relative z-10 p-3 md:p-4 flex flex-col">
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
@@ -321,12 +333,13 @@ export default function Home() {
                 }}
                 placeholder="Type @ for connectors"
                 rows={2}
-                className="w-full bg-transparent text-[#E3E5E5] placeholder-[#6E7373] outline-none resize-none text-base leading-relaxed border-none mb-2"
+                className="w-full bg-transparent text-[#E3E5E5] placeholder-[#6E7373] outline-none resize-none text-sm md:text-base leading-relaxed border-none mb-2"
               />
 
-              {/* Нижние кнопки */}
-              <div className="flex items-center justify-between pt-1">
-                <div className="flex items-center gap-2">
+              {/* Нижние кнопки (Адаптированные для мобилок) */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                
+                <div className="flex items-center gap-1.5 md:gap-2">
                   <button type="button" className="p-1 text-[#8E9393] hover:text-white transition-colors duration-300 rounded-md hover:bg-[#2A2C2C]">
                     <Plus className="w-4 h-4" />
                   </button>
@@ -335,36 +348,34 @@ export default function Home() {
                     <button
                       type="button"
                       onClick={() => setMode('search')}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-medium transition-all duration-300 ${
+                      className={`flex items-center gap-1 px-2.5 md:px-3 py-1 rounded-md text-[10px] md:text-[11px] font-medium transition-all duration-300 ${
                         mode === 'search' ? 'bg-[#2A2C2C] text-white shadow-sm' : 'text-[#8E9393] hover:text-white'
                       }`}
                     >
                       <Search className="w-3 h-3" />
                       <span>Search</span>
-                      <ChevronDown className={`w-2.5 h-2.5 text-[#8E9393] transition-all duration-300 ${mode === 'search' ? 'opacity-100 scale-100' : 'opacity-0 scale-50 w-0 -ml-1'}`} />
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setMode('computer')}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-medium transition-all duration-300 ${
+                      className={`flex items-center gap-1 px-2.5 md:px-3 py-1 rounded-md text-[10px] md:text-[11px] font-medium transition-all duration-300 ${
                         mode === 'computer' ? 'bg-[#2A2C2C] text-white shadow-sm' : 'text-[#8E9393] hover:text-white'
                       }`}
                     >
                       <Monitor className="w-3 h-3" />
                       <span>Computer</span>
-                      <ChevronDown className={`w-2.5 h-2.5 text-[#8E9393] transition-all duration-300 ${mode === 'computer' ? 'opacity-100 scale-100' : 'opacity-0 scale-50 w-0 -ml-1'}`} />
                     </button>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <button type="button" className="flex items-center gap-1 text-[11px] text-[#8E9393] hover:text-white font-medium transition-colors duration-300">
+                <div className="flex items-center gap-2 md:gap-3 ml-auto">
+                  <button type="button" className="hidden sm:flex items-center gap-1 text-[11px] text-[#8E9393] hover:text-white font-medium transition-colors duration-300">
                     <span>{mode === 'search' ? 'Model' : 'Claude Opus 5'}</span>
                     <ChevronDown className="w-3 h-3" />
                   </button>
 
-                  <button type="button" className="text-[#8E9393] hover:text-white transition-colors duration-300 p-0.5">
+                  <button type="button" className="text-[#8E9393] hover:text-white transition-colors duration-300 p-1">
                     <Mic className="w-3.5 h-3.5" />
                   </button>
 
@@ -372,11 +383,12 @@ export default function Home() {
                     type="button" 
                     onClick={() => handleSubmit()}
                     disabled={isLoading || !prompt.trim()}
-                    className="w-8 h-8 rounded-full bg-[#E3E5E5] hover:bg-white text-black flex items-center justify-center transition-all duration-300 disabled:opacity-30 hover:scale-105 active:scale-95"
+                    className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-[#E3E5E5] hover:bg-white text-black flex items-center justify-center transition-all duration-300 disabled:opacity-30 hover:scale-105 active:scale-95"
                   >
                     {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin text-black" /> : <AudioLines className="w-3.5 h-3.5 text-black" />}
                   </button>
                 </div>
+
               </div>
 
               {/* Блок "Work in a project" */}
@@ -397,23 +409,23 @@ export default function Home() {
 
           {/* Карточки снизу */}
           {!response && !isLoading && (
-            <div className="w-full mt-4 min-h-[80px] relative">
+            <div className="w-full mt-3 md:mt-4 min-h-[80px] relative">
               
               <div className={`w-full transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] absolute inset-0 flex items-center justify-center ${
                 isIncognito ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-3 pointer-events-none'
               }`}>
-                <p className="text-[#8E9393] text-xs text-center py-4 tracking-wide">
+                <p className="text-[#8E9393] text-[11px] md:text-xs text-center py-4 tracking-wide px-2">
                   Sessions you create won't save to your history and expire after 24 hours
                 </p>
               </div>
 
-              <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 w-full transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-2.5 md:gap-3 w-full transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                 !isIncognito ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-3 pointer-events-none'
               }`}>
                 
                 <div 
                   onClick={() => setMode('search')}
-                  className={`relative overflow-hidden p-4 rounded-xl border cursor-pointer transition-all duration-500 hover:scale-[1.01] ${
+                  className={`relative overflow-hidden p-3.5 md:p-4 rounded-xl border cursor-pointer transition-all duration-500 hover:scale-[1.01] ${
                     mode === 'search' ? 'border-[#20B8CD]/50 shadow-lg' : 'border-[#2E3030] hover:border-[#404343]'
                   }`}
                 >
@@ -421,7 +433,7 @@ export default function Home() {
                   <div className={`absolute inset-0 bg-[#191A1A] transition-opacity duration-500 ${mode === 'search' ? 'opacity-0' : 'opacity-100'}`} />
 
                   <div className="relative z-10">
-                    <div className="flex items-center gap-2 text-sm font-medium text-white mb-1">
+                    <div className="flex items-center gap-2 text-xs md:text-sm font-medium text-white mb-1">
                       <Search className="w-4 h-4 text-white" />
                       <span>Search anything</span>
                     </div>
@@ -433,7 +445,7 @@ export default function Home() {
 
                 <div 
                   onClick={() => setMode('computer')}
-                  className={`relative overflow-hidden p-4 rounded-xl border cursor-pointer transition-all duration-500 hover:scale-[1.01] ${
+                  className={`relative overflow-hidden p-3.5 md:p-4 rounded-xl border cursor-pointer transition-all duration-500 hover:scale-[1.01] ${
                     mode === 'computer' ? 'border-[#20B8CD]/60 shadow-lg ring-1 ring-[#20B8CD]/30' : 'border-[#2E3030] hover:border-[#404343]'
                   }`}
                 >
@@ -441,7 +453,7 @@ export default function Home() {
                   <div className={`absolute inset-0 bg-[#191A1A] transition-opacity duration-500 ${mode === 'computer' ? 'opacity-0' : 'opacity-100'}`} />
 
                   <div className="relative z-10">
-                    <div className="flex items-center justify-between text-sm font-medium text-white mb-1">
+                    <div className="flex items-center justify-between text-xs md:text-sm font-medium text-white mb-1">
                       <div className="flex items-center gap-1.5">
                         <Monitor className="w-4 h-4 text-[#20B8CD]" />
                         <span>Get work done with Computer</span>
@@ -460,7 +472,7 @@ export default function Home() {
 
           {/* Ответ Cerebro */}
           {(isLoading || response) && (
-            <div style={{ backgroundColor: '#1F2020', borderColor: '#2E3030' }} className="w-full mt-6 p-5 border rounded-xl shadow-xl transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
+            <div style={{ backgroundColor: '#1F2020', borderColor: '#2E3030' }} className="w-full mt-4 md:mt-6 p-4 md:p-5 border rounded-xl shadow-xl transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
               <div style={{ borderColor: '#2E3030' }} className="flex items-center gap-2 mb-3 pb-2.5 border-b text-[#8E9393] text-xs uppercase tracking-wider font-semibold">
                 <Sparkles className="w-3.5 h-3.5 text-[#20B8CD]" /> Cerebro Answer {isIncognito && '(Incognito)'}
               </div>
@@ -471,7 +483,7 @@ export default function Home() {
                   <span className="text-xs font-medium animate-pulse">Cerebro ищет и анализирует информацию...</span>
                 </div>
               ) : (
-                <div className="text-white text-sm leading-relaxed whitespace-pre-wrap font-sans transition-opacity duration-300">
+                <div className="text-white text-xs md:text-sm leading-relaxed whitespace-pre-wrap font-sans transition-opacity duration-300">
                   {response}
                 </div>
               )}
